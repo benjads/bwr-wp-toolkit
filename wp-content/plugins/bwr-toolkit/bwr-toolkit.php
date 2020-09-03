@@ -14,5 +14,6 @@ License: GPLv3
  * Multisite primary (district) site features
  */
 if ( is_main_site() ) {
+    include_once 'bwrt-multisite.php';
     include_once 'bwrt-page-template.php';
 }

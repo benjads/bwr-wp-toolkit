@@ -1,6 +1,9 @@
 # Configuration.
 /.htaccess
 /wp-config.php
+/wp-*.php
+index.php
+/xmlrpc.php
 
 # Sitemap files.
 /sitemap.xml
@@ -23,11 +26,8 @@ wp-snapshots/*
 /wp-content/languages/*
 /wp-content/uploads/*
 /wp-content/plugins/*
-!wp-content/plugins/CUSTOM_PLUGIN_1
-!wp-content/plugins/CUSTOM_PLUGIN_2 # etc.
+!/wp-content/plugins/bwr-toolkit
 /wp-content/themes/*
-!wp-content/themes/CUSTOM_THEME_1
-!wp-content/themes/CUSTOM_THEME_2 # etc.
 
 # Ignore node dependency directories.
 **/node_modules/
