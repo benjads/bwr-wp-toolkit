@@ -6,7 +6,7 @@
 function bwrt_add_template_box() {
     add_meta_box(
         'bwrt_template_box_id',
-        'BWR Club Template',
+        'BWR Template',
         'bwrt_template_box_html',
         'page'
     );
@@ -23,7 +23,7 @@ function bwrt_template_box_html( WP_Post $post ) {
 
     ?>
     <input type="checkbox" name="bwrt_template" id="bwrt_template" class="postbox" <?php checked($value, 'on') ?>
-    <label for="bwrt_template">BWR Template Page</label>
+    <label for="bwrt_template">BWR Club Template Page</label>
     <input type="hidden" name="bwrt_template_hidden" value="0" />
     <?php
 }
@@ -69,3 +69,63 @@ function bwrt_page_column_view( string $column_name, int $id ) {
     }
 }
 add_action( 'manage_pages_custom_column', 'bwrt_page_column_view', 5, 2 );
+
+/**
+ * FILTER: Add add/remove template page bulk actions
+ *
+ * @param   array $bulk_actions     Current bulk actions, passed by core
+ * @return  array                   Updated bulk actions
+ */
+function bwrt_register_bulk( array $bulk_actions ): array {
+    $bulk_actions['bwrt_template_enable'] = 'Add to club template pages';
+    $bulk_actions['bwrt_template_disable'] = 'Remove from club template pages';
+    return $bulk_actions;
+}
+add_filter( 'bulk_actions-edit-page', 'bwrt_register_bulk' );
+
+/**
+ * FILTER: Perform bulk template enable/disable
+ *
+ * @param   string  $sendback   Redirect URL, passed by core
+ * @param   string  $doaction   Bulk action, passed by core
+ * @param   array   $items      Post IDs, passed by core
+ * @return  string              Modified ``$sendback``
+ */
+function bwrt_handle_bulk( string $sendback, string $doaction, array $items ): string {
+    if ( $doaction !== 'bwrt_template_enable' && $doaction !== 'bwrt_template_disable' ) {
+        return $sendback;
+    }
+
+    $state = (bool) ($doaction === 'bwrt_template_enable');
+    foreach ( $items as $post_id ) {
+        update_post_meta(
+            $post_id,
+            '_bwrt_template',
+            $state ? 'on' : 'off'
+        );
+    }
+
+    $sendback = add_query_arg( 'bwrt_template_completed', $state ? 'true' : 'false', $sendback );
+    $sendback = add_query_arg( 'bwrt_template_count', count( $items ), $sendback );
+    return $sendback;
+}
+add_filter( 'handle_bulk_actions-edit-page', 'bwrt_handle_bulk', 10, 3 );
+
+/**
+ * ACTION: Admin notice for bulk action confirmation
+ */
+function bwrt_bulk_notice() {
+    if ( empty( $_REQUEST['bwrt_template_completed'] ) ) {
+        return;
+    }
+
+    $op = $_REQUEST['bwrt_template_completed'] == 'true' ? 'Added' : 'Removed';
+    $count = intval( $_REQUEST['bwrt_template_count'] );
+
+    printf( '<div class="notice notice-success">' .
+        _n( '%s %s club template',
+            '%s %s club templates',
+            $count
+        ) . '</div>', esc_attr( $op ), esc_attr( $count ) );
+}
+add_action( 'admin_notices', 'bwrt_bulk_notice' );
